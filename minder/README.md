@@ -6,6 +6,8 @@ The garage door minder sends text messages through the [Twilio](https://www.twil
 
 By default, the minder generates a text message when the door has been open for an hour and another message when the door is next closed following an open door alert. The latter message is useful if the alerts are sent to multiple people so that they will know that the alert has been addressed.
 
+You can read more about the garage door minder on [my blog](http://altmode.wordpress.com/2013/10/21/the-garage-door-minder/).
+
 ### Python Requirements
 
 This application requires that the [Raspberry Pi GPIO daemon](https://github.com/jimfenton/raspberry-gpio-daemon), used to arbitrate multiple users of the GPIO port and permit access from a non-privileged process, also be installed and running.
