@@ -108,7 +108,17 @@ print """Content-Type: text/html
       
 </head>
 <body>
+<div align="center" id="warning"></div>
 <div align="center">
+<script>
+    var key = localStorage.getItem("key");
+    if (key == null)
+    {
+    document.getElementById("warning").innerHTML = "<h2>New key generated</h2>";
+    key = Math.floor(Math.random()*2147483648*4194304).toString();
+    localStorage.setItem("key",key);
+    }
+</script>
 """
 if state == "closed":
    print '<img src="/GarageClosed.png"/>'
