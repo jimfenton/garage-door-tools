@@ -2,7 +2,7 @@
 
 # garaged.py - Daemon to generate alerts when garage door is left open
 #
-# Copyright (c) 2013 Jim Fenton
+# Copyright (c) 2015 Jim Fenton
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -23,13 +23,14 @@
 # SOFTWARE.
 #
 
-__version__="0.1.0"
+__version__="0.2.0"
 
 import sys
 import os
 import socket
 import stat
 import traceback
+from datetime import timedelta, datetime, date, time
 import time
 import daemon
 import syslog
@@ -46,7 +47,11 @@ def gpio(s,cmd):
 # Send a push notification to the user(s)
 # This is called infrequently, so refresh the list of notifyees each time
 def notify(state,timestamp):
-    texttime = time.asctime(time.localtime(timestamp))
+    if timestamp.date() == datetime.now().date():
+        texttime = timestamp.strftime("%I:%M %p")
+    else:
+        texttime = timestamp.strftime("%d %b %Y %I:%M %p")
+            
     syslog.syslog("garaged: door "+state+" since "+texttime)
     try:
         with open("/etc/garaged.cfg","r") as f:
@@ -75,7 +80,7 @@ def garage_main():
 
     syslog.syslog("garaged: starting garage_main")
 
-    closedtime = time.time()
+    closedtime = datetime.now()
     validtime = closedtime
     notified = 0
 
@@ -100,7 +105,7 @@ def garage_main():
                 state = "invalid"
             else:
                 state = "closed"
-                closedtime = time.time()
+                closedtime = datetime.now()
         else:
             if dooropen == "true":
                 state = "open"
@@ -111,20 +116,20 @@ def garage_main():
 # Generate notifications as appropriate
 
         if state == "closed":
-            closedtime = time.time()
+            closedtime = datetime.now()
             validtime = closedtime
             if notified > 0:
                 notify(state, closedtime)
                 notified = 0
 
         elif state == "open":
-            validtime = time.time()
-            if time.time()-closedtime > 3600 and notified != 1:
+            validtime = datetime.now()
+            if datetime.now()-closedtime > timedelta(hours=1) and notified != 1:
                 notify(state, closedtime)
                 notified = 1
 
         else:
-            if time.time()-validtime > 60 and notified != 2:
+            if datetime.now()-validtime > timedelta(seconds=60) and notified != 2:
                 notify(state, validtime)
                 notified = 2
                 
