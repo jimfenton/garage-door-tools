@@ -22,8 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
+import json
 import socket
+import syslog
+import time
 
 # Send a command to the GPIO daemon and return the result
 def gpio(cmd):
@@ -59,6 +61,35 @@ else:
       state = "undetermined"
       action = "Operate"
 
+#Generate and record timestamp to protect against accidental replay
+
+ts = int(time.time()*1000.)
+try:
+   with open("/tmp/garagenonce","r") as f:
+      nonces = json.load(f)
+      f.close()
+
+      nonces = filter(lambda a: a >= ts-60000, nonces)
+
+except ValueError,IOError:
+    nonces = []
+
+nonces.append(ts)
+
+try:
+   with open("/tmp/garagenonce","w") as f:
+      nonces = json.dump(nonces, f)
+      f.close()
+
+except:
+    syslog.syslog("Can't write nonces file")
+
+
+
+      
+
+
+
 # Render web page
 
 print """Content-Type: text/html
@@ -79,7 +110,8 @@ print """Content-Type: text/html
         localStorage.setItem("key",key);
         }
       newpath = location.protocol + "//" + location.hostname + "/cgi-bin/operate.py";
-      newparams = {"key":key};
+      nonce = """,ts,""";
+      newparams = {"key":key, "nonce":nonce};
       post_to_url(newpath,newparams);
       }
       

@@ -102,6 +102,49 @@ key =form["key"].value
 
 descrip = "*"+key[-4:]
 
+try:
+    nonce = int(form["nonce"].value)
+
+except ValueError, KeyError:
+    print "<H1>Error</H1>"
+    print "Authentication failure - nonce not provided or invalid"
+    print "</body></html>"
+    exit()
+    
+ts = int(time.time()*1000)
+if nonce > ts or nonce < ts-60000:
+    print "<H1>Error</H1>"
+    print "Try again - stale session"
+    print "</body></html>"
+    syslog.syslog("Stale nonce " + str(nonce) + " at " + str(ts))
+    exit()
+
+try:
+    with open("/tmp/garagenonce","r") as f:
+        nonces = json.load(f)
+    f.close()
+
+    nonces = filter(lambda a: a >= ts-60000, nonces)
+
+except ValueError,IOError:
+    nonces = []
+
+if nonce not in nonces:
+    print "<H1>Error</H1>"
+    print "Authentication error - possible replay"
+    print "</body></html>"
+    syslog.syslog("Nonce not found "+ str(nonce))
+    exit()
+
+nonces.remove(nonce)
+try:
+   with open("/tmp/garagenonce","w") as f:
+      nonces = json.dump(nonces, f)
+      f.close()
+
+except:
+    syslog.syslog("Can't write nonces file")
+
 mode = gpio("input 12")
 
 if mode == "true":  #Normal mode, LEARN not pressed
