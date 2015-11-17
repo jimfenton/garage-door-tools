@@ -2,7 +2,7 @@
 
 # garage.py - Prompt page for garage door opener application
 #
-# Copyright (c) 2014 Jim Fenton
+# Copyright (c) 2014,2015 Jim Fenton
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -71,7 +71,7 @@ try:
 
       nonces = filter(lambda a: a >= ts-60000, nonces)
 
-except ValueError,IOError:
+except (ValueError,IOError):
     nonces = []
 
 nonces.append(ts)
